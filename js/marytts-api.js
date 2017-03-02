@@ -330,6 +330,7 @@ function synth() {
                 function (response) {
                     var result = response.result;
                     list_phones = [];
+                    var sid = 0;
                     for (var p in result.phrases)
                     {
                         for (var t in result.phrases[p].tokens)
@@ -338,8 +339,12 @@ function synth() {
                             {
                                 for (var ph in result.phrases[p].tokens[t].syllables[s].phones)
                                 {
+                                    //add syllables id for later use
+                                    result.phrases[p].tokens[t].syllables[s].phones[ph].id = sid;
                                     list_phones.push(result.phrases[p].tokens[t].syllables[s].phones[ph]);
                                 }
+                                //increment syllable id
+                                sid++;
                             }
                         }
                         if (result.phrases[p].end_pause_duration !== 0)
@@ -347,6 +352,7 @@ function synth() {
                             var pause = new Object();
                             pause.label = "_"; // FIXME: hack the pause label
                             pause.duration = result.phrases[p].endPauseDuration;
+                            pause.id = -1;  //skip this
                             list_phones.push(pause);
                         }
                     }
@@ -371,7 +377,7 @@ $(document).ready(function () {
 
     // Init & load audio file
     var options = {
-        container: document.querySelector('#waveform'),
+        container: '#waveform',
         // FIXME: see for the scrollbar
         // fillParent    : false,
         // minPxPerSec   : 2000,
@@ -404,15 +410,16 @@ $(document).ready(function () {
         //reset the zoom slider
         $('#slider').val(100);
         wavesurfer.zoom(100);
-        // Add segmentation labels
-        var segmentation = Object.create(WaveSurfer.Segmentation);
-        segmentation.init({
+        // Add timeline (previously segmentation) labels
+        var timeline = Object.create(WaveSurfer.Timeline);
+        timeline.init({
             wavesurfer: wavesurfer,
             container: "#timeline"
         });
 
         // Add segmentation region
         var start = 0;
+        var count = 0;
         wavesurfer.clearRegions();
         for (var p in list_phones) {
             var region = new Object();
@@ -420,8 +427,19 @@ $(document).ready(function () {
             region.drag = false;
             region.end = start + (list_phones[p].duration / 1000);
             region.color = randomColor(0.1);
+            //add annotation as per level
+            if ($('#annotation').val().length !== 0) {
+                region.annotation = list_phones[p].label;
+            }
+            //for syllables
+            if ($('#annotation').val() === 'syllables') {
+                if (count === 0 || list_phones[count - 1].id !== list_phones[count].id) {
+                    region.borderLeft = true;
+                }
+            }
             wavesurfer.addRegion(region);
             start += (list_phones[p].duration / 1000);
+            count++;
         }
 
         // // Add spectrogramm
@@ -474,9 +492,9 @@ $(document).ready(function () {
  */
 function randomColor(alpha) {
     return 'rgba(' + [
+        ~~(Math.random() * 219),
         ~~(Math.random() * 255),
-        ~~(Math.random() * 255),
-        ~~(Math.random() * 255),
+        ~~(Math.random() * 286),
         alpha || 1
     ] + ')';
 }

@@ -33,16 +33,23 @@
                 <div class="col-sm-8" id="synth_area">
                     <div class="form-group" id="text_area">
                         <label for="text-to-synth" class="h4">Text to Synthesize</label>
-                        <textarea id="text-to-synth" rows="7" class="form-control" name="text_to_synth" tabindex="1"></textarea>
+                        <textarea id="text-to-synth" rows="9" class="form-control" name="text_to_synth" tabindex="1"></textarea>
                     </div>
                 </div>
                 <div class="col-sm-4" id="voice_choices">
                     <div class="form-group" id="text_area">
                         <label for="languages" class="h4">Voices Area</label>
-                        <select class="form-control" name="languages" id="languages" size="3" onchange="selectLanguage();"></select>
+                        <select class="form-control" name="languages" id="languages" size="2" onchange="selectLanguage();"></select>
                         <div name="regions" id="regions"></div>
                         <br/>
-                        <select class="form-control" name="voices" id="voices" size="3" onchange="selectVoice();"></select>
+                        <select class="form-control" name="voices" id="voices" size="2" onchange="selectVoice();"></select>
+                        <br/>
+                        <select class="form-control" name="annotation" id="annotation">
+                            <option value="">Select annotation level</option>
+                            <option value="phones">Phones</option>
+                            <option value="syllables">Syllables</option>
+                            <option value="words">Words</option>
+                        </select>
                     </div>
                 </div>
             </div>
@@ -81,8 +88,7 @@
 
             <div class="row" id="results_area">
                 <div class="col-sm-12" id="audio_area">
-                    <div id="timeline">
-                    </div>
+                    <div id="timeline"></div>
                     <div id="waveform">
                         <div id="progress-bar">
                             <div class="progress-bar-blob"></div>
@@ -131,15 +137,11 @@
         <script src="js/jquery.min.js"></script>
         <script src="js/bootstrap.min.js"></script>
         <!-- wavesurfer.js -->
-        <script src="js/wavesurfer.js/src/wavesurfer.js"></script>
-        <script src="js/wavesurfer.js/src/util.js"></script>
-        <script src="js/wavesurfer.js/src/webaudio.js"></script>
-        <script src="js/wavesurfer.js/src/mediaelement.js"></script>
-        <script src="js/wavesurfer.js/src/drawer.js"></script>
-        <script src="js/wavesurfer.js/src/drawer.canvas.js"></script>
-        <script src="js/wavesurfer.js/plugin/wavesurfer.segmentation.js"></script>
+        <script src="js/wavesurfer.js/dist/wavesurfer.min.js"></script>
+        <script src="js/wavesurfer.js/dist/plugin/wavesurfer.timeline.min.js"></script> 
         <script src="js/wavesurfer.js/plugin/wavesurfer.regions.js"></script>
-        <!-- <script src="js/wavesurfer.js/plugin/wavesurfer.spectrogram.js"></script> -->
+        <!--<script src="js/wavesurfer.js/dist/plugin/wavesurfer.regions.min.js"></script>-->
+        <!--<script src="js/wavesurfer.js/dist/plugin/wavesurfer.spectrogram.min.js"></script>--> 
 
         <!-- Download part -->
         <script src="js/FileSaver.js/FileSaver.js"></script>
