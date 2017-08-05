@@ -331,6 +331,8 @@ function synth() {
                     var result = response.result;
                     list_phones = [];
                     var sid = 0;
+                    var tid = 0;
+                    var fid = 0;
                     for (var p in result.phrases)
                     {
                         for (var t in result.phrases[p].tokens)
@@ -340,21 +342,29 @@ function synth() {
                                 for (var ph in result.phrases[p].tokens[t].syllables[s].phones)
                                 {
                                     //add syllables id for later use
-                                    result.phrases[p].tokens[t].syllables[s].phones[ph].id = sid;
+                                    result.phrases[p].tokens[t].syllables[s].phones[ph].sid = sid;
+                                    result.phrases[p].tokens[t].syllables[s].phones[ph].tid = tid;
+                                    result.phrases[p].tokens[t].syllables[s].phones[ph].fid = fid;
                                     list_phones.push(result.phrases[p].tokens[t].syllables[s].phones[ph]);
                                 }
                                 //increment syllable id
                                 sid++;
                             }
+                            //increment token id
+                            tid++;
                         }
                         if (result.phrases[p].end_pause_duration !== 0)
                         {
                             var pause = new Object();
                             pause.label = "_"; // FIXME: hack the pause label
                             pause.duration = result.phrases[p].endPauseDuration;
-                            pause.id = -1;  //skip this
+                            pause.sid = -1;  //skip syllable
+                            pause.tid = -1;  //skip token
+                            pause.fid = -1;  //skip phrase
                             list_phones.push(pause);
                         }
+                        //increment phrase id
+                        sid++;
                     }
                     // Change the output level
                     setLevel();
@@ -416,41 +426,8 @@ $(document).ready(function () {
             wavesurfer: wavesurfer,
             container: "#timeline"
         });
-
-        // Add segmentation region
-        var start = 0;
-        var count = 0;
-        wavesurfer.clearRegions();
-        for (var p in list_phones) {
-            var region = new Object();
-            region.start = start;
-            region.drag = false;
-            region.end = start + (list_phones[p].duration / 1000);
-            region.color = randomColor(0.1);
-            //add annotation as per level
-            if ($('#annotation').val().length !== 0) {
-                region.annotation = list_phones[p].label;
-            }
-            //for syllables
-            if ($('#annotation').val() === 'syllables') {
-                if (count === 0 || list_phones[count - 1].id !== list_phones[count].id) {
-                    region.borderLeft = true;
-                }
-            }
-            wavesurfer.addRegion(region);
-            start += (list_phones[p].duration / 1000);
-            count++;
-        }
-
-        // // Add spectrogramm
-        // var spectrogram = Object.create(WaveSurfer.Spectrogram);
-
-        // spectrogram.init({
-        //     wavesurfer: wavesurfer,
-        //     container: "#spectrogram",
-        //     fftSamples: 1024
-        // });
-
+        //draw regions
+        drawRegions();
         // Finally play
         wavesurfer.play();
     });
@@ -464,7 +441,6 @@ $(document).ready(function () {
     wavesurfer.on('finish', function () {
         console.log('Finished playing');
     });
-
 
     /* Progress bar */
     document.addEventListener('DOMContentLoaded', function () {
@@ -485,6 +461,55 @@ $(document).ready(function () {
         wavesurfer.on('destroy', hideProgress);
         wavesurfer.on('error', hideProgress);
     });
+
+    //draw regions based on annotation dropdown value changes
+    $('#annotation').change(function () {
+        drawRegions();
+    });
+    /*
+     * draw regions
+     */
+    function drawRegions() {
+        // Add segmentation region
+        var start = 0;
+        var count = 0;
+        wavesurfer.clearRegions();
+        for (var p in list_phones) {
+            var region = new Object();
+            region.start = start;
+            region.drag = false;
+            region.end = start + (list_phones[p].duration / 1000);
+            region.color = randomColor(0.1);
+            //add annotation as per level
+            var level = parseInt($('#annotation').val());
+            if (level !== 0) {
+                region.annotation = list_phones[p].label;
+            }
+            //for syllables
+            if (level === 2) {
+                if (count === 0 || list_phones[count - 1].sid !== list_phones[count].sid) {
+                    region.borderLeft = true;
+                }
+            }
+            //for tokens
+            if (level === 3) {
+                if (count === 0 || list_phones[count - 1].tid !== list_phones[count].tid) {
+                    region.borderLeft = true;
+                    region.borderColor = "blue";
+                }
+            }
+            //for phrases
+            if (level === 4) {
+                if (count === 0 || list_phones[count - 1].fid !== list_phones[count].fid) {
+                    region.borderLeft = true;
+                    region.borderColor = "green";
+                }
+            }
+            wavesurfer.addRegion(region);
+            start += (list_phones[p].duration / 1000);
+            count++;
+        }
+    }
 });
 
 /**
